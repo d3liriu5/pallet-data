@@ -1,9 +1,8 @@
-# Pallet Data
+# Real Data, Real Prototypes
  
 This repo is a shared resource for anyone at Motive who wants to build prototypes, experiments, or internal tools using real fleet data&mdash;without needing deep technical expertise or wrangling fake placeholder content.
 
-It contains anonymized schema files that represent the core parts of our platform. Think of them as maps: they tell you exactly what data exists, what it's called, and how it connects together. Pair them with v0, Claude Code, or Figma Make, and you can go from idea to working prototype in an afternoon.
-
+It contains anonymized schema files that represent the core parts of our platform. Think of them as maps: they tell you exactly what data exists, what it's called, and how it connects together&mdash;and they're designed to be pasted directly into AI-assisted prototyping tools like v0, Claude Code, and Figma Make.
  
 ## Why prototype with real data?
  
@@ -14,14 +13,15 @@ Real data surfaces edge cases early, builds stakeholder confidence, and means le
 
 ## What's in this repo
  
-| File | Dataset | What it covers |
-|------|---------|----------------|
-| `fx_schema.md` | Fleet Operations | Drivers, vehicles, live locations, geofences, safety events |
-| `cd_schema.md` | Fleet + Motive Card | Everything in fx_schema.md, plus Motive Cards, spend profiles, transactions |
-| `cn_schema.md` (coming soon) | Fleet + Safety | Drivers, vehicles, live locations, safety events, coaching |
+| File                         | Industry            | Pillars                                   | At a Glance Volume          |
+|------------------------------|---------------------|-------------------------------------------|-----------------------------|
+| `cd_schema.md`               | field services      | Fleet Ops, Safety, Motive Card            | 1K card transactions/week   |
+| `fx_schema.md`               | LTL freight         | Fleet Ops, Geofences, Safety, Maintenance | 19K+ drivers, 18K+ vehicles |
+| `cn_schema.md` (coming soon) | managed services    | Fleet Ops, Safety, Coaching               | 6K+ safety events/week      |
+| `bi_schema.md` (coming soon) | commercial trucking | Fleet Ops, Safety, Equipment, WFM         |                             |
+| `hb_schema.md` (coming soon) | oil & gas           | Fleet Ops, Geofences, WFM                 |                             |
  
-**Not sure which one to use?** Start with `fx_schema.md` if your prototype is about where drivers are, how they're driving, or their status. Use `cd_schema.md` if your prototype touches money&mdash;fuel spend, card limits, transaction history. Use `cn_schema.md` if your prototype has a safety or coaching angle.
-
+**Not sure which one to use?** Start with `fx_schema.md` if your prototype is about where drivers are, how they're driving, or their status. Use `cd_schema.md` if your prototype touches money&mdash;fuel spend, card limits, transaction history.
 
 ## How to use these files
  
@@ -31,14 +31,14 @@ Each schema file contains:
 - **Column listings** — every field name, its data type, and whether it can be empty
 - **Entity relationship summary** — how the tables connect to each other, and what to watch out for
 
-The workflow is simple:
+The workflow:
  
 1. Open the relevant schema file and skim the table descriptions
 2. Identify which tables and columns your prototype needs
 3. Paste the schema (or the relevant section) into your AI-assisted prototyping tool of choice as context
 4. Describe what you want to build
 
-The data lives in Supabase. To connect, you'll need two credentials&mdasha `project URL` and an `anon key`. Request both from Manny on Slack, store them in a .env file locally, and never commit them to any respository. Your AI-assisted prototyping tool will help you establish a connection to the anonymized, live data.
+The data lives in Supabase and requires two credentials to connect: a `project URL` and an `anon key`. Request both from Manny on Slack, store them in a `.env` file locally, and never commit them to any repository. Your AI-assisted prototyping tool will help you establish a connection to the anonymized, live data.
  
 ### v0
  
