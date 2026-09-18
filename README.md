@@ -1,27 +1,26 @@
 # Real Data, Real Prototypes
  
-This repo is a shared resource for anyone at Motive who wants to build prototypes, experiments, or internal tools using real fleet data&mdash;without needing deep technical expertise or wrangling fake placeholder content.
+This repo is a shared resource for anyone at Motive who wants to build prototypes, experiments, or internal tools using real fleet data&mdash;no deep technical expertise required, no placeholder content to wrangle.
 
-It contains anonymized schema files that represent the core parts of our platform. Think of them as maps: they tell you exactly what data exists, what it's called, and how it connects together&mdash;and they're designed to be pasted directly into AI-assisted prototyping tools like v0, Claude Code, and Figma Make.
+The data is anonymized, not synthetic. It reflects real structural patterns, real edge cases, and real volume. The schema files here are maps: they tell you what data exists, what it's called, and how it connects — designed to be pasted directly into AI-assisted prototyping tools like v0, Claude Code, and Figma Make.
+
  
 ## Why prototype with real data?
  
-Fake data doesn't cut it. A list of "Chandler Bing, Rachel Green, Ross Geller" doesn't tell you whether your layout breaks when a name is unusually long. Placeholder numbers don't reveal that transaction patterns and amounts in real life are weird. A hardcoded map pin doesn't reflect that 40% of your fleet is parked in rural areas with no nearby landmarks.
+Fake data doesn't cut it. A list of "Chandler Bing, Rachel Green, Ross Geller" won't tell you your layout breaks on long names. Placeholder numbers won't reveal that transaction amounts are weird and inconsistent. A hardcoded map pin doesn't reflect that 40% of your fleet parks in rural areas with no nearby landmarks.
 
-Real data surfaces edge cases early, builds stakeholder confidence, and means less rework when your prototype hands off to production. The schemas in this repo are structurally similar to what's in production, allowing you to design and test against data that actually reflects reality.
+Real data surfaces edge cases early, builds stakeholder confidence, and reduces rework when your prototype hands off to production. These schemas are structurally close to production&mdash;so what you design is what you'll actually ship against.
 
 
 ## What's in this repo
  
 | File                         | Industry            | Pillars                                   | At a Glance Volume          |
 |------------------------------|---------------------|-------------------------------------------|-----------------------------|
-| `cd_schema.md`               | field services      | Fleet Ops, Safety, Motive Card            | 1K card transactions/week   |
-| `fx_schema.md`               | LTL freight         | Fleet Ops, Geofences, Safety, Maintenance | 19K+ drivers, 18K+ vehicles |
-| `cn_schema.md` (coming soon) | managed services    | Fleet Ops, Safety, Coaching               | 6K+ safety events/week      |
-| `bi_schema.md` (coming soon) | commercial trucking | Fleet Ops, Safety, Equipment, WFM         |                             |
-| `hb_schema.md` (coming soon) | oil & gas           | Fleet Ops, Geofences, WFM                 |                             |
+| `cd_schema.md`               | field services      | Fleet Ops, Motive Card                    | 1K card transactions/week   |
+| `fx_schema.md`               | LTL freight         | Fleet Ops, Geofences, Maintenance         | 19K+ drivers, 18K+ vehicles |
+| `cn_schema.md`               | managed services    | Fleet Ops, Safety, Coaching               | 6K+ safety events/week      |
  
-**Not sure which one to use?** Start with `fx_schema.md` if your prototype is about where drivers are, how they're driving, or their status. Use `cd_schema.md` if your prototype touches money&mdash;fuel spend, card limits, transaction history.
+**Not sure which one to use?** Start with `cn_schema.md` if your prototype is about where drivers are, how they're driving, or their status. Use `cd_schema.md` if your prototype touches money&mdash;fuel spend, card limits, transaction history. Use `fx_schema.md` for a representation of a large fleet with geofences across the country.
 
 ## How to use these files
  
@@ -65,14 +64,6 @@ Figma Make is prompt-driven and has a native Supabase integration. Connect your 
 > Using the fx_drivers table, build a driver roster dashboard. Show each driver's full name, duty status as a colored badge, and carrier city and state. Filter to active drivers only and sort alphabetically by last name. Use our design library for components and styling.
 >
 > [paste schema excerpt here]
-
-
-## A few things to know
- 
-- **Monetary values are mixed units.** Transaction amounts in `_card_transactions` are in dollars. Spend limits in `_spend_profiles` are in cents. Always divide spend profile limits by 100 before displaying or comparing them.
-- **Location data is a snapshot.** The `_latest_vehicle_locations` tables store only the *current* position of each vehicle, not history. Reach out to Manny if you need historical location data.
-- **Card assignments aren't mutually exclusive.** A card in `_cards` can be assigned to a driver, a vehicle, or an asset. Check which of the three `assigned_to_*` columns is non-null rather than assuming one is always set.
-- **This data is anonymized, not synthetic.** It reflects real structural patterns, real edge cases, and real volume.
 
  
 ## Contributing, feedback, and requests
