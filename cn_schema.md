@@ -10,7 +10,7 @@
 | email                               | text         | YES      | NULL              |                                                   |
 | first_name                          | text         | YES      | NULL              |                                                   | 
 | last_name                           | text         | YES      | NULL              |                                                   |
-| group_ids                           | int8         | YES      | NULL              |                                                   |
+| group_ids                           | int8[        | YES      | NULL              |                                                   |
 | company_reference_id                | int8         | YES      | NULL              |                                                   |
 | phone                               | text         | YES      | NULL              |                                                   |
 | phone_country_code                  | text         | YES      | NULL              |                                                   |
@@ -22,11 +22,13 @@
 | carrier_city                        | text         | YES      | NULL              |                                                   |
 | carrier_state                       | text         | YES      | NULL              |                                                   |
 | carrier_zip                         | text         | YES      | NULL              |                                                   |
+| carrier_country                     | text         | YES      | NULL              |                                                   |
 | violation_alerts                    | text         | YES      | NULL              |                                                   |
 | terminal_street                     | text         | YES      | NULL              |                                                   |
 | terminal_city                       | text         | YES      | NULL              |                                                   |
 | terminal_state                      | text         | YES      | NULL              |                                                   |
 | terminal_zip                        | text         | YES      | NULL              |                                                   |
+| terminal_country                    | text         | YES      | NULL              |                                                   |
 | cycle                               | text         | YES      | NULL              |                                                   |
 | exception_24_hour_restart           | boolean      | YES      | NULL              |                                                   |
 | exception_8_hour_break              | boolean      | YES      | NULL              |                                                   |
@@ -51,6 +53,7 @@
 | eld_mode                            | text         | YES      | NULL              |                                                   |
 | drivers_license_number              | text         | YES      | NULL              |                                                   |
 | drivers_license_state               | text         | YES      | NULL              |                                                   |
+| drivers_license_country             | text         | YES      | NULL              |                                                   |
 | yard_moves_enabled                  | boolean      | YES      | NULL              |                                                   |
 | personal_conveyance_enabled         | boolean      | YES      | NULL              |                                                   |
 | manual_driving_enabled              | boolean      | YES      | NULL              |                                                   |
@@ -62,7 +65,7 @@
 | status                              | text         | YES      | NULL              | Values: active, deactivated                       |
 | web_current_sign_in_at              | timestamptz  | YES      | NULL              |                                                   |
 | web_last_sign_in_at                 | timestamptz  | YES      | NULL              |                                                   |
-| external_ids                        | int8         | YES      | NULL              |                                                   |
+| external_ids                        | int8[]       | YES      | NULL              |                                                   |
 | created_at                          | timestamptz  | NO       | now()             |                                                   |
 | updated_at                          | timestamptz  | YES      | NULL              |                                                   |
 
@@ -84,11 +87,13 @@ CREATE TABLE cn_drivers (
   carrier_city text null,
   carrier_state text null,
   carrier_zip text null,
+  carrier_country text null,
   violation_alerts text null,
   terminal_street text null,
   terminal_city text null,
   terminal_state text null,
   terminal_zip text null,
+  terminal_country text null,
   cycle text null,
   exception_24_hour_restart boolean null,
   exception_8_hour_break boolean null,
@@ -113,6 +118,7 @@ CREATE TABLE cn_drivers (
   eld_mode text null,
   drivers_license_number text null,
   drivers_license_state text null,
+  drivers_license_country text null,
   yard_moves_enabled boolean null,
   personal_conveyance_enabled boolean null,
   manual_driving_enabled boolean null,
@@ -205,6 +211,56 @@ create table cn_vehicles (
 );
 
 
+## cn_vehicle_locations
+
+> Stores the locations of vehicles.
+
+### Table
+| Column                              | Type         | Nullable | Default           | Description                                       |
+|-------------------------------------|--------------|----------|-------------------|---------------------------------------------------|
+| id                                  | uuid         | NO       |                   | Unique identifier of the vehicle location         |
+| vehicle_id                          | int8         | NO       |                   | Unique identifier of the vehicle                  |
+| vehicle_number                      | text         | NO       |                   | Company-defined vehicle identifier                |
+| location_time                       | timestamptz  | NO       |                   | Timestamp when the location data was recorded     |
+| location_point                      | geography    | YES      | NULL              | Lat/Lon of the vehicle's current location         |
+| location_description                | text         | YES      | NULL              | Description of the vehicle's current location     |
+| location_lat                        | float8       | NO       |                   | Latitude of the vehicle's current location        |
+| location_lon                        | float8       | NO       |                   | Longitude of the vehicle's current location       |
+| location_bearing                    | float8       | YES      | NULL              | Bearing of the vehicle, in degrees                |
+| location_type                       | text         | YES      | NULL              | Type of movement or status of vehicle             |
+| h3cell                              | text[]       | YES      | NULL              | Hexagonal cell ids current location belongs to    |
+| odometer                            | float8       | YES      | NULL              | Vehicle's odometer reading, in miles              |
+| engine_hours                        | float8       | YES      | NULL              | Total engine hours of the vehicle                 |
+| fuel_in_tank                        | float8       | YES      | NULL              | Current amount of fuel in the vehicle's tank      |
+| speed                               | float8       | YES      | NULL              | Speed of the vehicle at time of location (in mph) |
+| driver_id                           | int8         | YES      | NULL              | Unique identifier of the current driver           |
+
+### DDL
+create table cn_vehicle_locations (
+  id uuid not null default gen_random_uuid (),
+  vehicle_id bigint not null,
+  vehicle_number text not null,
+  location_time timestamp with time zone not null,
+  location_point geography null,
+  location_description text null,
+  location_lat double precision not null,
+  location_lon double precision not null,
+  location_bearing double precision null,
+  location_type text null,
+  h3cell text[] null,
+  odometer double precision null,
+  engine_hours double precision null,
+  fuel_in_tank double precision null,
+  speed double precision null,
+  created_at timestamp with time zone not null default now(),
+  driver_id bigint null,
+  constraint cn_vehicle_locations_pkey primary key (id),
+  constraint cn_vehicle_locations_location_id_key unique (id),
+  constraint cn_vehicle_locations_vehicle_id_fkey foreign KEY (vehicle_id) references cn_vehicles (id)
+);
+create index IF not exists idx_cn_vehicle_location_time on public.cn_vehicle_locations using btree (vehicle_id, location_time desc) TABLESPACE pg_default;
+
+
 ## cn_latest_vehicle_locations
 
 > Stores the most recent location, assigned driver, and telemetry snapshot for each vehicle in a company's fleet.
@@ -213,29 +269,32 @@ create table cn_vehicles (
 | Column                              | Type         | Nullable | Default           | Description                                       |
 |-------------------------------------|--------------|----------|-------------------|---------------------------------------------------|
 | vehicle_id                          | int8         | NO       |                   | Unique identifier of the vehicle                  |
-| vehicle_number                      | text         | YES      | NULL              | Company-defined vehicle identifier                |
+| vehicle_number                      | text         | NO       | NULL              | Company-defined vehicle identifier                |
 | driver_id                           | int8         | YES      | NULL              | Unique identifier of the current driver           |
 | location_point                      | geography    | YES      | NULL              | Lat/Lon of the vehicle's current location         |
-| location_time                       | timestamptz  | YES      | NULL              | Timestamp when the location data was recorded     |
+| location_time                       | timestamptz  | NO       | NULL              | Timestamp when the location data was recorded     |
 | location_description                | text         | YES      | NULL              | Description of the vehicle's current location     |
-| location_lat                        | float8       | YES      | NULL              | Latitude of the vehicle's current location        |
-| location_lon                        | float8       | YES      | NULL              | Longitude of the vehicle's current location       |
+| location_lat                        | float8       | NO       | NULL              | Latitude of the vehicle's current location        |
+| location_lon                        | float8       | NO       | NULL              | Longitude of the vehicle's current location       |
 | location_bearing                    | float8       | YES      | NULL              | Bearing of the vehicle, in degrees                |
 | location_type                       | text         | YES      | NULL              | Type of movement or status of vehicle             |
+| location_id                         | uuid         | YES      | NULL              | Unique identifier of the vehicle location         |
 | h3cell                              | text[]       | YES      | NULL              | Hexagonal cell ids current location belongs to    |
 | odometer                            | float8       | YES      | NULL              | Vehicle's odometer reading, in miles              |
 | engine_hours                        | float8       | YES      | NULL              | Total engine hours of the vehicle                 |
 | fuel_in_tank                        | float8       | YES      | NULL              | Current amount of fuel in the vehicle's tank      |
+| speed                               | float8       | YES      | NULL              | The speed of the vehicle in miles per hour        |
+| updated_at                          | timestamptz  | NO       | NULL              |                                                   |
 
 ### DDL
 create table cn_latest_vehicle_locations (
   driver_id bigint null,
   location_point geography null,
   vehicle_id bigint not null,
-  location_time timestamp with time zone null,
+  location_time timestamp with time zone not null,
   location_description text null,
-  location_lat double precision null,
-  location_lon double precision null,
+  location_lat double precision not null,
+  location_lon double precision not null,
   vehicle_number text not null,
   location_bearing double precision null,
   location_type text null,
@@ -243,11 +302,14 @@ create table cn_latest_vehicle_locations (
   odometer double precision null,
   engine_hours double precision null,
   fuel_in_tank double precision null,
+  location_id uuid null default gen_random_uuid (),
+  speed double precision null,
+  updated_at timestamp with time zone not null default now(),
   constraint cn_latest_vehicle_locations_pkey primary key (vehicle_id),
   constraint cn_latest_vehicle_locations_vehicle_id_key unique (vehicle_id),
-  constraint cn_latest_vehicle_locations_driver_id_fkey foreign KEY (driver_id) references cn_drivers (id),
   constraint cn_latest_vehicle_locations_vehicle_id_fkey foreign KEY (vehicle_id) references cn_vehicles (id)
 );
+create index IF not exists cn_latest_vehicle_locations_location_point_idx on cn_latest_vehicle_locations using gist (location_point);
 
 
 ## cn_assets
@@ -361,15 +423,15 @@ create table cn_geofences (
 | duration                             | int8         | YES      |                   | Duration of the event, in seconds                 |
 | end_bearing                          | float8       | YES      |                   | Bearing at the end of the event, in degrees       |
 | end_speed                            | float8       | YES      |                   | Speed at the end of the event, in km/h            |
-| end_time                             | timestampz   | YES      |                   |                                                   |
+| end_time                             | timestamptz  | YES      |                   |                                                   |
 | end_point                            | geography    | YES      |                   | Lat/Lon of event end location                     |
 | m_gps_heading                        | float8[]     | YES      |                   | Array of GPS headings during the event            |
-| m_gps_points                         | geography[]  | YES      |                   | Array of Lat/Lon during the event                 |
+| m_gps_points                         | geography    | YES      |                   | Array of Lat/Lon during the event                 |
 | m_veh_odo                            | float8       | YES      | NULL              | Odometer reading during the event                 |
 | m_veh_spd                            | float8[]     | YES      |                   | Array of vehicle speeds during the event, in km/h |
 | start_bearing                        | float8       | YES      |                   | Bearing at the start of the event, in degrees     |
 | start_speed                          | float8       | YES      |                   | Speed at the start of the event, in km/h          |
-| start_time                           | timestampz   | YES      |                   |                                                   |
+| start_time                           | timestamptz  | YES      |                   |                                                   |
 | type                                 | text         | YES      |                   | Type of performance event                         |
 | type_pretty                          | text         | YES      |                   | Type of performance event, for display            |
 | driver_id                            | int8         | YES      |                   | Unique identifier of the driver                   |
@@ -380,16 +442,14 @@ create table cn_geofences (
 | camera_media_id                      | int8         | YES      |                   | Unique identifier of the camera media             |
 | camera_media_available               | boolean      | YES      | NULL              |                                                   |
 | camera_media_front_facing_video_url  | text         | YES      |                   |                                                   |
-| camera_media_front_facing_photo_url  | text         | YES      |                   |                                                   |
+| camera_media_front_facing_image_url  | text         | YES      |                   |                                                   |
 | camera_media_driver_facing_video_url | text         | YES      |                   |                                                   |
-| camera_media_driver_facing_photo_url | text         | YES      |                   |                                                   |
+| camera_media_driver_facing_image_url | text         | YES      |                   |                                                   |
 | camera_type                          | text         | YES      | NULL              |                                                   |
 | company_name                         | text         | YES      |                   |                                                   |
 | location                             | text         | YES      |                   |                                                   |
 | coaching_status                      | text         | YES      |                   | Coaching status of the event                      |
-| coached_at                           | timestampz   | YES      |                   |                                                   |
-| max_speed                            | float8       | YES      |                   |                                                   |
-| min_speed                            | float8       | YES      |                   |                                                   |
+| coached_at                           | timestamptz  | YES      |                   |                                                   |
 | edited_by_fm                         | boolean      | YES      | FALSE             |                                                   |
 | annotation_tags                      | text[]       | YES      |                   | Annotation tags for the event                     |
 | severity                             | text         | YES      |                   | Severity of the event                             |
@@ -402,11 +462,11 @@ create table cn_geofences (
 | avg_over_speed                       | float8       | YES      |                   | Speeding event: avg speed over posted limit       |
 | min_posted_speed_limit               | float8       | YES      |                   | Speeding event: min posted speed limit            |
 | max_posted_speed_limit               | float8       | YES      |                   | Speeding event: max posted speed limit            |
-| avg_vehicle_speed                    | float8       | YES      |                   | Speeding event: avg vehicle speed during event    |
-| min_vehicle_speed                    | float8       | YES      |                   | Speeding event: min vehicle speed during event    |
-| max_vehicle_speed                    | float8       | YES      |                   | Speeding event: max vehicle speed during event    |
+| max_speed                            | float8       | YES      |                   |                                                   |
+| min_speed                            | float8       | YES      |                   |                                                   |
+| avg_speed                            | float8       | YES      |                   |                                                   |
 | start_point                          | geography    | YES      |                   | Speeding event: Lat/Long of event start location  |
-| type_of_speeding                     | text         | YES      |                   | Speeding event: Type, e.g. "posted"               |
+| speeding_event_type                  | text         | YES      |                   | Speeding event: Type, e.g. "posted"               |
 | speeding_event_status                | text         | YES      |                   | Speeding event: Status, e.g. "invalid"            |
 
 ### DDL
@@ -446,7 +506,6 @@ create table cn_events (
   edited_by_fm boolean null,
   annotation_tags text[] null,
   severity text null,
-  created_at timestamp with time zone not null default now(),
   event_intensity_name text null,
   event_intensity_value text null,
   min_time_to_hit_range double precision null,
@@ -458,7 +517,7 @@ create table cn_events (
   max_posted_speed_limit double precision null,
   avg_speed double precision null,
   start_point geography null,
-  type_of_speeding text null,
+  speeding_event_type text null,
   speeding_event_status text null,
   camera_media_driver_facing_video_url text null,
   camera_media_driver_facing_image_url text null,
@@ -466,7 +525,8 @@ create table cn_events (
   constraint cn_events_id_key unique (id),
   constraint cn_events_driver_id_fkey foreign KEY (driver_id) references cn_drivers (id),
   constraint cn_events_vehicle_id_fkey foreign KEY (vehicle_id) references cn_vehicles (id)
-)
+);
+
 
 ## Entity Relationships
 
@@ -480,8 +540,16 @@ A **Driver** can be assigned to one **Vehicle** at a time. Each **Vehicle** has 
 |----------------------|--------------|-----------------------------|--------------------------------------------------------------------|
 | cn_drivers           | has one      | cn_vehicles                 | cn_vehicles.current_driver_id → cn_drivers.id                      |
 | cn_vehicles          | has one      | cn_latest_vehicle_locations | cn_latest_vehicle_locations.vehicle_id → cn_vehicles.id            |
-| cn_drivers           | has one      | cn_latest_vehicle_locations | cn_latest_vehicle_locations.driver_id → cn_drivers.id              |
+| cn_drivers           | has many     | cn_vehicle_locations        | cn_vehicle_locations.driver_id → cn_drivers.id                     |
+| cn_vehicles          | has many     | cn_vehicle_locations        | cn_vehicle_locations.vehicle_id → cn_vehicles.id                   |
 | cn_drivers           | has many     | cn_events                   | cn_events.driver_id → cn_drivers.id                                |
 | cn_vehicles          | has many     | cn_events                   | cn_events.vehicle_id → cn_vehicles.id                              |
 
-### Notes
+
+## Notes
+- `cn_latest_vehicle_locations` is a snapshot table — it stores only the most recent location per vehicle, not a history.
+- `cn_vehicle_locations` stores locations for vehicles from the past two weeks.
+- `cn_events` stores safety and performance events (speeding, harsh braking, etc.) from the past two weeks – filter on `type`, display `type_pretty`.
+- Events cover an interval, not a point in time. Filter on `start_time` rather than mixing it with `end_time` across queries.
+- `cn_geofences` has no FK relationships — geofence monitoring is done elsewhere and mapping is done using PostGIS (location_points) or the h3cell array.
+- H3 cell arrays (`h3cell`) on `fx_latest_vehicle_locations` store 16 resolution levels (0–15) generated at insert time. Postgres arrays are 1-indexed, so `h3cell[1]` = resolution 0 (coarsest) and `h3cell[16]` = resolution 15 (finest).
