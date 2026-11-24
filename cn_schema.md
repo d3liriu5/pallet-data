@@ -652,6 +652,40 @@ A **Driver** can be assigned to one **Vehicle** at a time. Each **Vehicle** has 
 
 ---
 
+### cn_get_positions_at
+
+> Returns each vehicle's most recent location ping at or before a given point in time. Used to reconstruct where the fleet was at a specific moment — for playback, historical snapshots, or time-scrubbing on the map.
+
+**Parameters**
+| Parameter  | Type        | Default  | Description                                                              |
+|------------|-------------|----------|--------------------------------------------------------------------------|
+| p_time     | timestamptz |          | The point in time to look up — returns pings at or before this timestamp |
+| p_lookback | interval    | 24 hours | How far back to search for each vehicle's most recent ping               |
+
+**Returns**
+| Column               | Type        | Description                                 |
+|----------------------|-------------|---------------------------------------------|
+| vehicle_id           | text        | Unique identifier of the vehicle            |
+| driver_id            | text        | Unique identifier of the assigned driver    |
+| vehicle_number       | text        | Company-defined vehicle identifier          |
+| location_time        | timestamptz | Timestamp of the ping                       |
+| location_lat         | float8      | Latitude at the time of the ping            |
+| location_lon         | float8      | Longitude at the time of the ping           |
+| location_bearing     | float8      | Bearing of the vehicle in degrees           |
+| location_type        | text        | Type of movement or status of vehicle       |
+| speed                | float8      | Speed of the vehicle in mph                 |
+| location_description | text        | Human-readable location description         |
+| odometer             | float8      | Odometer reading in miles                   |
+| engine_hours         | float8      | Total engine hours at time of ping          |
+| fuel_in_tank         | float8      | Fuel in tank at time of ping                |
+
+**Notes**
+- Returns one row per vehicle — the most recent ping within the lookback window at or before `p_time`.
+- Vehicles with no pings in the lookback window are excluded from results.
+- `vehicle_id` and `driver_id` are returned as `text` to prevent JavaScript precision loss on large `bigint` values.
+
+---
+
 ### lab_ids
 
 > Helper function that validates and converts an array of text IDs to `bigint[]`. Returns `NULL` when the input is null or empty, which is treated as "no filter" by the list functions. Raises an exception if any value is not a valid integer.
